@@ -1,0 +1,65 @@
+#include<stdio.h>
+#include<pthread.h>
+
+#define NTHREADS 2
+#define NUMBERS 10000
+
+int threads[NTHREADS]; //Declarando vetor que armazena as threads
+int vetor[NUMBERS]; //Declarando vetor de armazenamento dos 10000 valores
+
+void * quadrado (void * arg){ //Função que a thread ira executar
+    int id = *(int *) arg;
+    threads[id-1]=id;
+
+    if (id == 1){
+        for (int i=0;i<(NUMBERS/2);i++){
+            vetor[i] = (vetor[i]) * (vetor[i]); //Fazendo o quadrado dos valores até 5000
+        }
+    }
+
+    if (id == 2){
+        for (int i=(NUMBERS/2);i<NUMBERS;i++){
+            vetor[i] = (vetor[i]) * (vetor[i]); //Fazendo o quadrado dos valores de 5000 até 10000
+        }
+    }
+
+    pthread_exit(NULL);
+}
+
+int main(void){
+    pthread_t tid[NTHREADS];  //Identificador
+    int id[NTHREADS]; //Identificador interno da função
+
+
+    for(int i=0;i<NUMBERS;i++){ //Preenchendo o vetor com valores sequenciais (1,2,3,4,5,...)
+        vetor[i] = (i+1);
+    }
+    
+    for(int i=0;i<NTHREADS;i++){
+        id[i]=i+1;
+        if (pthread_create(&tid[i], NULL, quadrado, (void*)&id[i])){
+            printf("ERRO");
+        }
+    }
+    
+    for(int i=0;i<NTHREADS;i++){
+        if (pthread_join(tid[i], NULL)){
+            printf("ERRO");
+        }
+    }
+
+    //Verificação pedida
+    int vetorTeste[NUMBERS]; //Vetor teste para verificação
+    for(int i=0;i<NUMBERS;i++){
+        vetorTeste[i] = (i+1)*(i+1); //Preenchendo o vetor com valores sequenciais elevado ao quadrado (1,4,9,16,25,...)
+        if(vetorTeste[i] != vetor[i]){
+            printf("Diferença entre os vetores. Erro inesperado!");
+            return 1;
+        }
+    }
+    
+    printf("Programa executado com sucesso!");
+
+    pthread_exit(NULL); //Desvincula o termino da main e do programa
+    return 0;
+}
